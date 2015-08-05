@@ -36,64 +36,84 @@ public class recommendBool {
      * command line arguments:
      * pcodes: csv file containing a patient_num and a code on each line, currently hardcoded to patients_nomods.csv
      * patients: file containing a unique set of patient_num's representing the disease group
-     *
      */
     public static void main(String[] args) throws Exception {
+
+
         String splitBy = ",";
-        BufferedReader br = new BufferedReader(new FileReader("patients_nomods.csv"));
+        BufferedReader br = new BufferedReader(new FileReader("allpatients.csv"));
         String line;
-        PrintWriter writer = new PrintWriter("data2.csv","UTF-8");
-        while( (line = br.readLine()) != null){
-            if(line.isEmpty())
-            {
+        PrintWriter writer = new PrintWriter("data2.csv", "UTF-8");
+        while ((line = br.readLine()) != null) {
+            if (line.isEmpty()) {
                 continue;
             }
-            //out.println(line);
             String[] b = line.split(splitBy);
-            //writer.println(b[0] + "\t" + b[1].replaceAll("[^0-9]", ""));
             writer.println(b[0] + "," + b[1].hashCode());
         }
         writer.close();
         br.close();
 
-       // BufferedReader sick = new BufferedReader(new FileReader("sick_patients.txt"));
-        //splitBy = "\\n";
+
         ArrayList<Long> sick = new ArrayList<Long>();
         Scanner scan = new Scanner(new File("sick_patients.txt"));
-        while(scan.hasNext()){
+        while (scan.hasNext()) {
             sick.add(scan.nextLong());
         }
         scan.close();
-        //Iterator<Long> iter1 = sick;
-       // out.println(sick.get(1));
+
 
         // int[] sickids = SOMETHINGTHATREADSTHE_PATIENTS_FILEINTOANARRAY;
 
         DataModel model = new GenericBooleanPrefDataModel(
                 GenericBooleanPrefDataModel.toDataMap(
                         new FileDataModel(new File("data2.csv"))));
-                UserSimilarity similarity = new LogLikelihoodSimilarity(model);
-                //UserSimilarity similarity = new TanimotoCoefficientSimilarity(model);
-                UserNeighborhood neighborhood = new NearestNUserNeighborhood(1, similarity, model);
-                // hopefully the below can be an int array
-                // somehow have ii created out of sickids[]
-                //LongPrimitiveIterator ii = model.getUserIDs();
-                int i=1;
-                ArrayList<Long> errors = new ArrayList<Long>();
-                writer = new PrintWriter("LogLikelihood.csv","UTF-8");
-                PrintWriter err = new PrintWriter("Error.csv","UTF-8");
-                writer.println("row_no,patient_id,neighbor_id,score");
-                long[] myHood;
+        UserSimilarity similarity = new LogLikelihoodSimilarity(model);
+        //UserSimilarity similarity = new TanimotoCoefficientSimilarity(model);
+        //Gets a neighborhood of 1, calculates similarity based on the model
+        UserNeighborhood neighborhood = new NearestNUserNeighborhood(1, similarity, model);
+        // hopefully the below can be an int array
+        // somehow have ii created out of sickids[]
+        //LongPrimitiveIterator ii = model.getUserIDs();
+        int i = 1;
+        ArrayList<Long> errors = new ArrayList<Long>();
+        writer = new PrintWriter("LogLikelihood.csv", "UTF-8");
+        PrintWriter err = new PrintWriter("Error.csv", "UTF-8");
+        writer.println("row_no,patient_id,neighbor_id,score");
+        long[] myHood;
 
-                for(int temp=0; temp < sick.size(); temp++){
-                   LongPrimitiveIterator ii = model.getUserIDs();
+
+        for (Long temp : sick) {
+            //out.println(temp);
+            myHood = neighborhood.getUserNeighborhood(temp);
+            out.println(temp + " " +myHood.length);
+            for (Long control : myHood) {
+                out.println("\t" + control + " " + similarity.userSimilarity(temp, control));
+            }
+            for (Long control : myHood) {
+                if (sick.contains(control)) {
+                    continue;
+                }
+                writer.println(temp + "," + control + "," + similarity.userSimilarity(temp, control));
+                break;
+            }
+        }
+        writer.close();
+    }
+}
+                //for(int temp=0; temp < sick.size(); temp++){
+                /*   LongPrimitiveIterator ii = model.getUserIDs();
                    while(ii.hasNext()) {
                        Long userid = ii.next();
+                       //use this as the parameter
+                       //sick.contains(userid);
                        out.println(sick.get(temp) + ":" + userid);
-                       myHood = neighborhood.getUserNeighborhood(userid);
+                       //Computes a "neighborhood" of users like a given user.
+                       myHood = neighborhood.getUserNeighborhood(userid);   //ID of user for which a neighborhood will be computed
                        // do whatever is appropriate to exclude the values in sickids[] from myHood[]
                        if(sick.get(temp) != userid) {
                             try {
+                                //usersimilarity define a notion of similarity between two users.
                                 writer.println(i + "," + userid + "," + myHood[0] + "," + similarity.userSimilarity(userid, myHood[0]));
                                 //break;
                             } catch (IndexOutOfBoundsException e) {
@@ -109,17 +129,19 @@ public class recommendBool {
                    //i++;
 
                   // out.println(i);
-               }
-                err.close();
-                writer.close();
+                  */
+              // }
+                //err.close();
+
                // out.println(errors.get(0));
 
 
 
+/*
+                    Recommender recommender= new GenericUserBasedRecommender(model, neighborhood, similarity);
 
-        //              Recommender recommender= new GenericUserBasedRecommender(model, neighborhood, similarity);
-
-       // List<RecommendedItem> recommendations = recommender.recommend(1, 1);
+        List<RecommendedItem> recommendations = recommender.recommend(1, 1);
+        */
 /*
         for (RecommendedItem recommendation : recommendations) {
             out.println(model.getNumUsers());
@@ -127,6 +149,7 @@ public class recommendBool {
             out.println(recommendation);
         }
         */
-
+/*
     }
 }
+*/
